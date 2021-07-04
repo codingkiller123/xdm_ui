@@ -94,6 +94,19 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/iotcard',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: 'type/detail/:dictId',
+        component: (resolve) => require(['@/views/commanage/iotcard/detail'], resolve),
+        name: 'Detail',
+        meta: { title: '卡详情', icon: '' }
+      }
+    ]
+  },
+  {
     path: '/job',
     component: Layout,
     hidden: true,

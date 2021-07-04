@@ -22,7 +22,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-      
+
     </el-form>
 
     <el-row :gutter="10" class="mb8">
@@ -35,9 +35,13 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="iotCardList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="iotCardList"  @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ICCID" width="185" align="center" prop="iccid" />
+      <el-table-column label="ICCID" width="185" align="center" prop="iccid" >
+        <template slot-scope="scope">
+          <router-link :to="'/iotcard/type/detail/' + scope.row.iccid" class="link-type">  <span>{{scope.row.iccid}}</span></router-link>
+        </template>
+      </el-table-column>
       <el-table-column label="MSISDN" width="120" align="center" prop="msisdn" />
       <el-table-column label="IMSI" align="center" prop="imsi" :formatter="typeFormat" />
       <el-table-column label="运营商类型" align="center" prop="operatorType" />
@@ -49,7 +53,7 @@
       <el-table-column label="本月总量(M)" align="center" prop="undefined" />
       <el-table-column label="流量余量(M)" align="center" prop="flowLeft" />
       <el-table-column label="本月短信用量(条)" align="center" prop="baseMeal" />
-      
+
       <el-table-column label="激活时间" align="center" prop="activeTime" width="100">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
@@ -63,6 +67,13 @@
 
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-view"
+              @click="handleView(scope.row,scope.index)"
+              v-hasPermi="['system:notice:query']"
+            >详细</el-button>
           <el-button
             size="mini"
             type="text"
@@ -88,6 +99,39 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
+
+    <!-- 卡片详情 -->
+    <el-dialog  ref="cardDetail" title="卡片详情" :visible.sync="open2" width="600px" append-to-body>
+      <el-form ref="form" :model="form" label-width="100px" size="mini">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="ICCID：">{{ form.iccid }}</el-form-item>
+            <el-form-item
+              label="MSISDN：">{{ form.msisdn }}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="IMIS：">{{ form.imis }}</el-form-item>
+            <el-form-item label="运营商类型：">{{ form.operatorType }}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="卡状态：">{{ statusFormat(form) }}</el-form-item>
+            <el-form-item label="基础套餐：">{{ form.baseMeal }}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="流量用量：">{{ form.flowTotal }}</el-form-item>
+            <el-form-item label="本月总量：">{{ form.undefined }}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="流量余量：">{{ form.flowLeft }}</el-form-item>
+            <el-form-item label="本月短信：">{{ form.baseMeal }}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="激活时间：">{{ form.activeTime }}</el-form-item>
+            <el-form-item label="失效时间：">{{ form.unusedTime }}</el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </el-dialog>
 
     <!-- 添加或修改公告对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="780px" append-to-body>
@@ -146,7 +190,7 @@ import Editor from '@/components/Editor';
 export default {
   name: "Notice",
   components: {
-    Editor, 
+    Editor,
     Treeselect
   },
   data() {
@@ -169,6 +213,7 @@ export default {
       iotCardList: [],
       // 弹出层标题
       title: "",
+      open2:false,
       // 是否显示弹出层
       open: false,
       // 类型数据字典
@@ -236,6 +281,11 @@ export default {
     // 公告状态字典翻译
     typeFormat(row, column) {
       return this.selectDictLabel(this.typeOptions, row.noticeType);
+    },
+    /** 详细按钮操作 */
+    handleView(row) {
+      this.open2 = true;
+      this.form = row;
     },
     // 取消按钮
     cancel() {
