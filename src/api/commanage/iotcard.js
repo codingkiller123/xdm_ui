@@ -11,12 +11,10 @@ export function listIotCard(query) {
 
 export function getIotCardType(iccid) {
   return request({
-    url: '/system/dict/type/' + iccid,
+    url: '/business/iotcard/detail/' + iccid,
     method: 'get'
   })
 }
-
-
 // 查询公告详细
 export function getNotice(noticeId) {
   return request({

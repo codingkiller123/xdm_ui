@@ -40,13 +40,13 @@
                   <div   class="el-row">
                     <el-form ref="form" :model="form" label-width="100px" size="mini">
                     <div   class="spanCol el-col el-col-24">
-                      ICCID:{{ form.iccid }}
+                      ICCID:{{ iotCardDetail.iccid }}
                     </div>
                     <div   class="spanCol el-col el-col-24">
-                      MSISDN:{{ form.msisdn }}
+                      MSISDN:{{ iotCardDetail.msisdn }}
                     </div>
                     <div   class="spanCol el-col el-col-24">
-                      运营商类型:{{ form.operatorType }}
+                      运营商类型:{{ iotCardDetail.operatorType }}
                     </div>
                     </el-form>>
                   </div>
@@ -61,7 +61,7 @@
 
 <script>
 import { optionList } from "@/api/system/dept";
-import { listIotCard } from "@/api/commanage/iotcard";
+import { getIotCardType } from "@/api/commanage/iotcard";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import Editor from '@/components/Editor';
@@ -88,6 +88,8 @@ export default {
       deptOptions: [],
       // 总条数
       total: 0,
+      // 卡详情
+      iotCardDetail:undefined,
       // 公告表格数据
       iotCardList: [],
       // 弹出层标题
@@ -119,7 +121,8 @@ export default {
     };
   },
   created() {
-    this.getList();
+    const iccId = this.$route.params && this.$route.params.iccid;
+    this.getCardDetail(iccId);
     /** 获取公司客户列表 */
     optionList().then(response => {
       this.deptOptions = this.handleTree(response.data, "deptId");
@@ -134,11 +137,10 @@ export default {
   },
   methods: {
     /** 查询卡列表 */
-    getList() {
+    getCardDetail(iccId) {
       this.loading = true;
-      listIotCard(this.queryParams).then(response => {
-        this.iotCardList = response.rows;
-        this.total = response.total;
+      getIotCardType(this.queryParams).then(response => {
+        this.iotCardDetail = response.data;
         this.loading = false;
       });
     },
@@ -160,93 +162,6 @@ export default {
     // 公告状态字典翻译
     typeFormat(row, column) {
       return this.selectDictLabel(this.typeOptions, row.noticeType);
-    },
-    /** 详细按钮操作 */
-    handleView(row) {
-      this.open2 = true;
-      this.form = row;
-    },
-    // 取消按钮
-    cancel() {
-      this.open = false;
-      this.reset();
-    },
-    // 表单重置
-    reset() {
-      this.form = {
-        noticeId: undefined,
-        noticeTitle: undefined,
-        noticeType: undefined,
-        noticeContent: undefined,
-        status: "0"
-      };
-      this.resetForm("form");
-    },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.noticeId)
-      this.single = selection.length!=1
-      this.multiple = !selection.length
-    },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "添加公告";
-    },
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.reset();
-      const noticeId = row.noticeId || this.ids
-      getNotice(noticeId).then(response => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改公告";
-      });
-    },
-    /** 提交按钮 */
-    submitForm: function() {
-      this.$refs["form"].validate(valid => {
-        if (valid) {
-          if (this.form.noticeId != undefined) {
-            updateNotice(this.form).then(response => {
-              this.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
-            });
-          } else {
-            addNotice(this.form).then(response => {
-              this.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
-            });
-          }
-        }
-      });
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const noticeIds = row.noticeId || this.ids
-      this.$confirm('是否确认删除公告编号为"' + noticeIds + '"的数据项?', "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      }).then(function() {
-        return delNotice(noticeIds);
-      }).then(() => {
-        this.getList();
-        this.msgSuccess("删除成功");
-      }).catch(() => {});
     }
   }
 };
