@@ -9,9 +9,9 @@ export function listIotCard(query) {
   })
 }
 
-export function getIotCardType(iccid) {
+export function getIotCardType(iccId) {
   return request({
-    url: '/business/iotcard/detail/' + iccid,
+    url: '/business/iotcard/detail?iccId=' + iccId,
     method: 'get'
   })
 }
